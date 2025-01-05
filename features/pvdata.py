@@ -79,7 +79,7 @@ def run(emparts, config):
         host, port, modbusid, manufacturer = inv
 
         device_class = get_device_class(host, int(port), int(modbusid))
-        if device_class == "Solar Inverter":
+        if device_class in ("Solar Inverter", "Hybrid Inverter"):
             relevant_registers = eval(config.get('registers'))
             mdata = get_pv_data(host, int(port), int(modbusid), relevant_registers)
             pv_data.append(mdata)
@@ -89,7 +89,7 @@ def run(emparts, config):
             pv_data.append(mdata)
         else:
             if (pv_debug > 1):
-                print("pv: unknown device class; skipping")
+                print("pv: unknown device class {device_class}; skipping")
             pass
 
     # query

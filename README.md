@@ -78,6 +78,9 @@ sudo ip route add 224.0.0.0/4 dev interfacename
 ```
 sudo apt install git
 sudo apt install python3 cl-py-configparser
+pip install paho-mqtt 
+pip install pymodbus
+pip3 install Homie4
 sudo mkdir /opt/smaemd/
 sudo mkdir /etc/smaemd/
 sudo useradd -c "smaemd-user" -d /opt/smaemd -M -N -r -s /usr/sbin/nologin smaemd

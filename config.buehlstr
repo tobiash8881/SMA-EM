@@ -1,0 +1,191 @@
+[SMA-EM]
+# serials of sma-ems the daemon should take notice
+# separated by space
+serials=3016917694
+# features could filter serials to, but wouldn't see serials if these serials was not defines in SMA-EM serials
+# list of features to load/run
+#features=simplefswriter sample pvdata mqtt remotedebug symcon influxdb mqtthomie
+features=pvdata mqtthomie
+
+[DAEMON]
+pidfile=/run/smaemd.pid
+# listen on an interface with the given ip
+# use 0.0.0.0 for any interface
+ipbind=0.0.0.0
+# multicast ip and port of sma-datagrams
+# defaults
+mcastgrp=239.12.255.254
+mcastport=9522
+statusdir=
+
+# each feature/plugin has its own section
+# called FEATURE-[featurename]
+# the feature section is required if a feature is listed in [SMA-EM]features
+
+[FEATURE-simplefswriter]
+nothing=here
+# list serials simplefswriter notice
+#serials=30028xxxxx
+# measurement vars simplefswriter should write to filesystem (only from smas with serial in serials)
+#values=pconsume psupply qsupply ssupply
+#statusdir=
+
+[FEATURE-sample]
+nothing=here
+
+[FEATURE-mqtt]
+# MQTT broker details
+mqtthost=192.168.0.71
+mqttport=1883
+mqttuser=openhabian
+mqttpass=mqtt@openhabPW
+#The following list contains all possible field names that you can use with
+#the feature mqtt, symcon, influxdb in the file /etc/smaemd/config.
+#  prefix:  p=real power, q=reactive power, s=apparent power, i=current, u=voltage
+#  postfix: unit=the unit of the item, e.g. W, VA, VAr, Hz, A, V, kWh, kVArh, kVAh ...
+#  postfix: counter=energy value (kWh, kVArh, kVAh)
+#           without postfix counter=>power value (W, VAr, VA)
+#mqttfields=pconsume,  pconsumeunit, pconsumecounter, pconsumecounterunit,
+#           psupply,   psupplyunit,  psupplycounter,  psupplycounterunit,
+#           qconsume,  qconsumeunit, qconsumecounter, qconsumecounterunit,
+#           qsupply,   qsupplyunit,  qsupplycounter,  qsupplycounterunit,
+#           sconsume,  sconsumeunit, sconsumecounter, sconsumecounterunit,
+#           ssupply,   ssupplyunit,  ssupplycounter,  ssupplycounterunit,
+#           cosphi,    cosphiunit,
+#           frequency, frequencyunit,
+#           p1consume, p1consumeunit, p1consumecounter, p1consumecounterunit,
+#           p1supply,  p1supplyunit,  p1supplycounter,  p1supplycounterunit, 
+#           q1consume, q1consumeunit, q1consumecounter, q1consumecounterunit, 
+#           q1supply,  q1supplyunit,  q1supplycounter,  q1supplycounterunit, 
+#           s1consume, s1consumeunit, s1consumecounter, s1consumecounterunit, 
+#           s1supply,  s1supplyunit,  s1supplycounter,  s1supplycounterunit, 
+#           i1,        i1unit,
+#           u1,        u1unit,
+#           cosphi1,   cosphi1unit,
+#           p2consume, p2consumeunit, p2consumecounter, p2consumecounterunit,
+#           p2supply,  p2supplyunit,  p2supplycounter,  p2supplycounterunit, 
+#           q2consume, q2consumeunit, q2consumecounter, q2consumecounterunit, 
+#           q2supply,  q2supplyunit,  q2supplycounter,  q2supplycounterunit, 
+#           s2consume, s2consumeunit, s2consumecounter, s2consumecounterunit, 
+#           s2supply,  s2supplyunit,  s2supplycounter,  s2supplycounterunit, 
+#           i2,        i2unit,
+#           u2,        u2unit,
+#           cosphi2,   cosphi2unit,
+#           p3consume, p3consumeunit, p3consumecounter, p3consumecounterunit,
+#           p3supply,  p3supplyunit,  p3supplycounter,  p3supplycounterunit, 
+#           q3consume, q3consumeunit, q3consumecounter, q3consumecounterunit, 
+#           q3supply,  q3supplyunit,  q3supplycounter,  q3supplycounterunit, 
+#           s3consume, s3consumeunit, s3consumecounter, s3consumecounterunit, 
+#           s3supply,  s3supplyunit,  s3supplycounter,  s3supplycounterunit, 
+#           i3,        i3unit,
+#           u3,        u3unit,
+#           cosphi3,   cosphi3unit,
+#           speedwire-version
+mqttfields=pconsume,pconsumecounter,psupply,psupplycounter,p1consume,p2consume,p3consume,p1supply,p2supply,p3supply,frequency,i1,i2,i3,u1,u2,u3,cosphi1,cosphi2,cosphi3
+#topic will be exteded with serial
+mqtttopic=SMA-EM/status
+pvtopic=SMA-PV/status
+# publish all values as single topics (0 or 1)
+publish_single=1
+# How frequently to send updates over (defaults to 20 sec)
+min_update=5
+#debug output
+debug=0
+
+# ssl support
+# adopt mqttport above to your ssl enabled mqtt port, usually 8883
+# options:
+# activate without certs=use tls_insecure
+# activate with ca_file, but without client_certs
+ssl_activate=0
+# ca file to verify
+ssl_ca_file=ca.crt
+# client certs
+ssl_certfile=
+ssl_keyfile=
+#TLSv1.1 or TLSv1.2 (default 2)
+tls_protocol=2
+
+[FEATURE-mqtthomie]
+# MQTT broker details
+mqtthost=192.168.0.71
+mqttport=1883
+mqttuser=openhabian
+mqttpass=mqtt@openhabPW
+mqttfields=pconsume,pconsumecounter,psupply,psupplycounter,p1consume,p2consume,p3consume,p1supply,p2supply,p3supply,frequency,i1,i2,i3,u1,u2,u3,cosphi1,cosphi2,cosphi3
+#topic will be exteded with serial
+mqtttopic=SMA-HM
+invertertopic=SMA-PV
+# How frequently to send updates over (defaults to 20 sec)
+min_update=5
+#debug output
+debug=1
+
+# ssl support
+# adopt mqttport above to your ssl enabled mqtt port, usually 8883
+# options:
+# activate without certs=use tls_insecure
+# activate with ca_file, but without client_certs
+ssl_activate=0
+# ca file to verify
+ssl_ca_file=ca.crt
+# client certs
+ssl_certfile=
+ssl_keyfile=
+#TLSv1.1 or TLSv1.2 (default 2)
+tls_protocol=2
+
+[FEATURE-remotedebug]
+# Debug settings
+debughost=mypc
+debugport=9100
+
+[FEATURE-pvdata]
+#Reads data from SMA inverter via Modbus.
+#Enable the mqtt feature to publish the data to a mqtt broker (features=pvdata mqtt),
+#and/or stored the data to a influx database (features=pvdata influxdb), and/or symcom ...
+
+# How frequently to send updates over (defaults to 20 sec)
+min_update=5
+#debug output
+debug=0
+
+# inverter connection
+# ['host', 'port', 'modbus_id', 'manufacturer']
+inverters = [
+    ['192.168.0.61', '502', '3', 'SMA']
+    ]
+
+#For Modbus registers, see e.g. https://www.google.com/search?q=SMA_Modbus-TI-en-23.xlsx
+#['Modbus register address', 'Format', 'Unit', 'Name', 'Type']
+#If the mqtt feature is used, 'Name' is included in the MQTT JSON payload as tag name.
+registers = [
+    ['30057', 'U32', 'RAW', 'serial', ''],               #Don't change 'serial'      => it is used in some features/*.py files. As alternative use the mqtt topic
+    ['30201', 'U32', 'ENUM', 'Status',''],               #Don't change 'Status'      => it is used in smamodbus.py to decode the enumeration
+    ['30051', 'U32', 'ENUM', 'DeviceClass',''],          #Don't change 'DeviceClass' => it is used in smamodbus.py to decode the enumeration
+    ['30053', 'U32', 'ENUM', 'DeviceID',''],             #Don't change 'DeviceID'    => it is used in smamodbus.py to decode the enumeration
+#    ['40631', 'STR32', 'UTF8', 'Device_Name', ''],
+    ['30775', 'S32', 'FIX0', 'AC Power', 'W'],           #Don't change 'AC Power'    => it is used in some features/*.py files. As alternative use the mqtt topic 'SMA-EM/status/30028xxxxx/pvsum' => 30028xxxxx => see 'serials' above
+#    ['30813', 'S32', 'FIX0', 'AC_Power_Apparent', 'VA'],
+#    ['30977', 'S32', 'FIX3', 'AC_Current', 'A'],
+#    ['30783', 'S32', 'FIX2', 'AC_Voltage_L1', 'V'],
+#    ['30785', 'S32', 'FIX2', 'AC_Voltage_L2', 'V'],
+#    ['30787', 'S32', 'FIX2', 'AC_Voltage_L3', 'V'],
+#    ['30777', 'S32', 'FIX0', 'AC_Power_L1', 'W'],
+#    ['30779', 'S32', 'FIX0', 'AC_Power_L2', 'W'],
+#    ['30781', 'S32', 'FIX0', 'AC_Power_L3', 'W'],
+#    ['30803', 'U32', 'FIX2', 'Grid_Frequency', 'Hz'],
+#    ['30773', 'S32', 'FIX0', 'DC_Input1_Power', 'W'],
+#    ['30771', 'S32', 'FIX2', 'DC_Input1_Voltage', 'V'],
+#    ['30769', 'S32', 'FIX3', 'DC_Input1_Current', 'A'],
+#    ['30961', 'S32', 'FIX0', 'DC_Input2_Power', 'W'],
+#    ['30959', 'S32', 'FIX2', 'DC_Input2_Voltage', 'V'],
+#    ['30957', 'S32', 'FIX3', 'DC_Input2_Current', 'A'],
+#    ['30953', 'S32', 'FIX1', 'Device_Temperature', u'\xb0C'],
+    ['30517', 'U64', 'FIX3', 'daily yield', 'kWh'],      #Don't change 'daily yield'    => it is used in some features/*.py files. As alternative use the mqtt topic 'SMA-EM/status/30028xxxxx/pvdaily' => 30028xxxxxs => see 'serials' above
+#    ['30513', 'U64', 'FIX3', 'Total_Yield', 'kWh'],
+#    ['30521', 'U64', 'FIX0', 'Operating_Time', 's'],
+#    ['30525', 'U64', 'FIX0', 'Feed-in_Time', 's'],
+#    ['30975', 'S32', 'FIX2', 'Intermediate_Circuit_Voltage', 'V'],
+#    ['30225', 'S32', 'FIX0', 'Isolation_Resistance', u'\u03a9']
+    ]

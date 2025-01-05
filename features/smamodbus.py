@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 '''
     smaem modbus library
 
@@ -23,15 +25,15 @@
     }
 '''
 
-from pymodbus.payload import BinaryPayloadDecoder
 from pymodbus.constants import Endian
 import datetime
-from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+from pymodbus.client import ModbusTcpClient as ModbusClient
 import traceback
 
 # defines
 MIN_SIGNED = -2147483648
 MAX_UNSIGNED = 4294967295
+
 modbusdatatype = {  ## allowed data types, sent from target
     'S32': 2,
     'U32': 2,
@@ -40,6 +42,7 @@ modbusdatatype = {  ## allowed data types, sent from target
     'S16': 1,
     'U16': 1
 }
+
 pvenums = {
     'Status': {
         35: 'Error',
@@ -53,6 +56,7 @@ pvenums = {
         8001: 'Solar Inverter',
         8002: 'Wind Turbine Inverter',
         8007: 'Battery Inverter',
+        8009: 'Hybrid Inverter',
         8033: 'Consumer',
         8064: 'Sensor System in General',
         8065: 'Electricity meter',
@@ -396,7 +400,11 @@ pvenums = {
         9402: 'SB3.6-1AV-41',
         9403: 'SB4.0-1AV-41',
         9404: 'SB5.0-1AV-41',
-        9405: 'SB6.0-1AV-41'
+        9405: 'SB6.0-1AV-41',
+        19048: 'STP5.0-3SE-40',
+        19049: 'STP6.0-3SE-40',
+        19050: 'STP8.0-3SE-40',
+        19051: 'STP10.0-3SE-40'
     },
     'BatteryState': {
         303: 'Off',
@@ -424,15 +432,15 @@ def get_device_class(host, port, modbusid):
         return None
 
     try:
-        received = client.read_input_registers(address=30051, count=2, unit=3)
+        received = client.read_input_registers(address=30051, count=2, slave=3)
     except:
         thisdate = str(datetime.datetime.now()).partition('.')[0]
         thiserrormessage = thisdate + ': Connection not possible. Check settings or connection.'
         print(thiserrormessage)
         return None
 
-    message = BinaryPayloadDecoder.fromRegisters(received.registers, byteorder=Endian.Big, wordorder=Endian.Big)
-    interpreted = message.decode_32bit_uint()
+    interpreted = client.convert_from_registers(received.registers, client.DATATYPE.UINT32, 'big')
+  
     dclass = pvenums["DeviceClass"].get(interpreted)
 
     client.close()
@@ -455,7 +463,7 @@ def get_pv_data(host, port, modbusid, registers):
         try:
             addr = int(myreg[0])
             dt = myreg[1]
-            received = client.read_input_registers(address=addr, count=modbusdatatype[dt], unit=int(modbusid))
+            received = client.read_input_registers(address=addr, count=modbusdatatype[dt], slave=int(modbusid))
         except Exception as e:
             thisdate = str(datetime.datetime.now()).partition('.')[0]
             thiserrormessage = thisdate + 'Modbus: Connection not possible. Check settings or connection.'
@@ -464,22 +472,27 @@ def get_pv_data(host, port, modbusid, registers):
             return None  ## prevent further execution of this function
 
         name = myreg[3]
-        message = BinaryPayloadDecoder.fromRegisters(received.registers, byteorder=Endian.Big, wordorder=Endian.Big)
+        #message = BinaryPayloadDecoder.fromRegisters(received.registers, byteorder=Endian.BIG, wordorder=Endian.BIG)
+        
         ## provide the correct result depending on the defined datatype
+        datatype = client.DATATYPE.UINT16
         if myreg[1] == 'S32':
-            interpreted = message.decode_32bit_int()
+            datatype = client.DATATYPE.INT32
         elif myreg[1] == 'U32':
-            interpreted = message.decode_32bit_uint()
+            datatype = client.DATATYPE.UINT32
         elif myreg[1] == 'U64':
-            interpreted = message.decode_64bit_uint()
+            datatype = client.DATATYPE.UINT64
         elif myreg[1] == 'STR32':
-            interpreted = message.decode_string(32)
+            datatype = client.DATATYPE.STRING
         elif myreg[1] == 'S16':
-            interpreted = message.decode_16bit_int()
+            datatype = client.DATATYPE.INT16
         elif myreg[1] == 'U16':
-            interpreted = message.decode_16bit_uint()
+            datatype = client.DATATYPE.UINT16
         else:  ## if no data type is defined do raw interpretation of the delivered data
-            interpreted = message.decode_16bit_uint()
+            datatype = client.DATATYPE.UINT16
+
+        interpreted = client.convert_from_registers(received.registers, datatype, 'big')
+
 
         ## check for "None" data before doing anything else
         if ((interpreted == MIN_SIGNED) or (interpreted == MAX_UNSIGNED)):

@@ -5,7 +5,8 @@
     2019-03-02 david-m-m
     2020-09-22 Tommi2Day ssl support
     2021-01-07 sellth added support for multiple inverters
-
+    2024-12-31 Fork for MQTT homie structure
+    
     Configuration:
 
     [FEATURE-mqtt]
@@ -42,6 +43,7 @@
 """
 
 import paho.mqtt.client as mqtt
+import paho.mqtt as pahodef
 import platform
 import json
 import time
@@ -50,7 +52,7 @@ import traceback
 
 mqtt_last_update = 0
 mqtt_debug = 0
-
+mqtt_homie_topic = "homie/"
 
 def run(emparts, config):
     global mqtt_last_update
@@ -59,7 +61,7 @@ def run(emparts, config):
     # Only update every X seconds
     if time.time() < mqtt_last_update + int(config.get('min_update', 20)):
         if (mqtt_debug > 1):
-            print("mqtt: data skipping")
+            print("mqtt homie: data skipping")
         return
 
     # prepare mqtt settings
@@ -67,9 +69,8 @@ def run(emparts, config):
     mqttport = config.get('mqttport', 1883)
     mqttuser = config.get('mqttuser', None)
     mqttpass = config.get('mqttpass', None)
-    mqtttopic = config.get('mqtttopic', "SMA-EM/status")
+    mqtttopic = config.get('mqtttopic', "SMA-EM")
     mqttfields = config.get('mqttfields', 'pconsume,psupply')
-    publish_single = int(config.get('publish_single', 0))
 
     ssl_activate = config.get('ssl_activate', False)
     ssl_ca_file = config.get('ssl_ca_file', None)
@@ -88,7 +89,7 @@ def run(emparts, config):
     # mqtt client settings
     myhostname = platform.node()
     mqtt_clientID = 'SMA-EM@' + myhostname
-    client = mqtt.Client(mqtt_clientID)
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, mqtt_clientID)
     if None not in [mqttuser, mqttpass]:
         client.username_pw_set(username=mqttuser, password=mqttpass)
 
@@ -98,30 +99,34 @@ def run(emparts, config):
             # use client cert
             client.tls_set(ssl_ca_file, certfile=ssl_certfile, keyfile=ssl_keyfile, tls_version=tls)
             if mqtt_debug > 0:
-                print("mqtt: ssl ca and client verify enabled")
+                print("mqtt homie: ssl ca and client verify enabled")
         elif ssl_ca_file:
             # no client cert
             client.tls_set(ssl_ca_file, tls_version=tls)
             if mqtt_debug > 0:
-                print("mqtt: ssl ca verify enabled")
+                print("mqtt homie: ssl ca verify enabled")
         else:
             # disable certificat verify as there is no certificate
             client.tls_set(tls_version=tls)
             client.tls_insecure_set(True)
             if mqtt_debug > 0:
-                print("mqtt: ssl verify disabled")
+                print("mqtt homie: ssl verify disabled")
     else:
         if mqtt_debug > 0:
-            print("mqtt: ssl disabled")
+            print("mqtt homie: ssl disabled")
 
     # last aupdate
     # last aupdate
     mqtt_last_update = time.time()
 
+    # energy meter
+
     serial = emparts['serial']
     data = {}
     for f in mqttfields.split(','):
         data[f] = emparts.get(f, 0)
+
+    data_with_units = extract_values_and_units(emparts)
 
     # add pv data
     pvpower = 0
@@ -133,7 +138,7 @@ def run(emparts, config):
             # handle missing data during night hours
             if inv.get("AC Power") is None:
                 pass
-            elif inv.get("DeviceClass") == "Solar Inverter":
+            elif inv.get("DeviceClass") in ("Solar Inverter", "Hybrid Inverter"):
                 pvpower += inv.get("AC Power", 0)
                 # NOTE: daily yield is broken for some inverters
                 daily += inv.get("daily yield", 0)
@@ -150,36 +155,65 @@ def run(emparts, config):
 
     data['timestamp'] = mqtt_last_update
     payload = json.dumps(data)
-    topic = mqtttopic + '/' + str(serial)
+    topic = mqtt_homie_topic + mqtttopic + str(serial)
     try:
         # mqtt connect
         client.connect(str(mqtthost), int(mqttport))
         client.loop_start()
-        client.publish(topic, payload)
+
+        # Define MQTT Topics
+        topic_homie = f"{topic}/$homie"
+        value_homie = f"4.0"
+        topic_name = f"{topic}/$name"
+        topic_state = f"{topic}/$state"
+        value_state = f"ready"
+        topic_nodes = f"{topic}/$nodes"
+        value_nodes = f"meter" 
+        topic_node = f"{topic}/meter"
+        topic_node_name = f"{topic_node}/$name"
+        value_node_name = f"SMA HomeManager2.0"    
+        topic_node_properties = f"{topic_node}/$properties"
+        value_node_properties = mqttfields   
+        client.publish(topic_homie, value_homie)
+        client.publish(topic_name, "SMA energy meter")
+        client.publish(topic_state, value_state)
+        client.publish(topic_nodes, value_nodes)
+        client.publish(topic_node_name, value_node_name)
+        client.publish(topic_node_properties, value_node_properties)
+
+        #client.publish(topic, payload)
         if mqtt_debug > 0:
-            print("mqtt: sma-em topic %s data published %s:%s" % (topic,
+            print("mqtt homie: sma-em topic %s data published %s:%s" % (topic,
                                                                   format(time.strftime("%H:%M:%S", time.localtime(
                                                                       mqtt_last_update))), payload))
-        # publish each value as separate topic
-        if publish_single == 1:
-            for item in data.keys():
-                itemtopic = topic + '/' + item
-                if mqtt_debug > 0:
-                    print("mqtt: publishing %s:%s" % (itemtopic, data[item]))
-                client.publish(itemtopic, str(data[item]))
+
+        for item in data_with_units.keys():
+            itemtopic = topic_node + '/' + item
+            item_topic_name = f"{itemtopic}/$name"
+            item_topic_unit = f"{itemtopic}/$unit"
+            item_topic_datatype = f"{itemtopic}/$datatype"
+
+            if mqtt_debug > 0:
+                print("mqtt homie: publishing %s:%s" % (itemtopic, data_with_units[item]["value"]))
+
+            client.publish(itemtopic, str(data_with_units[item]["value"]))
+            client.publish(item_topic_name, item)
+            client.publish(item_topic_unit, data_with_units[item]["unit"])
+            client.publish(item_topic_datatype, "float")
 
         # pvoption
-        mqttpvtopic = config.get('pvtopic', None)
+        # inverter
+        mqttpvtopic = mqtt_homie_topic + config.get('pvtopic', "SMD-PV")
         if None not in [pv_data, mqttpvtopic]:
             if pv_data is not None:
                 for inv in pv_data:
                     pvserial = inv.get("serial")
-                    pvtopic = mqttpvtopic + '/' + str(pvserial)
+                    pvtopic = mqttpvtopic + str(pvserial)
                     payload = json.dumps(inv)
                     # sendf pv topic
                     client.publish(pvtopic, payload)
                     if mqtt_debug > 0:
-                        print("mqtt: sma-pv topic %s data published %s:%s" % (
+                        print("mqtt homie: sma-pv topic %s data published %s:%s" % (
                             pvtopic,
                             format(time.strftime("%H:%M:%S",
                                                  time.localtime(
@@ -189,9 +223,22 @@ def run(emparts, config):
         client.disconnect()
 
     except Exception as e:
-        print("mqtt: Error publishing")
+        print("mqtt homie: Error publishing")
         print(traceback.format_exc())
         pass
+
+
+# Function to extract values and units
+def extract_values_and_units(data):
+    result = {}
+    
+    for key, value in data.items():
+        if 'unit' in key:  # If the key contains 'unit', it's the unit
+            value_key = key.replace('unit', '')  # Remove 'unit' to get the corresponding value key
+            if value_key in data:  # Check if the corresponding value exists
+                result[value_key] = {'value': data[value_key], 'unit': value}
+    
+    return result
 
 
 def stopping(emparts, config):
@@ -201,4 +248,4 @@ def stopping(emparts, config):
 def config(config):
     global mqtt_debug
     mqtt_debug = int(config.get('debug', 0))
-    print('mqtt: feature enabled')
+    print('mqtt homie: feature enabled')
