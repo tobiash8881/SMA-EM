@@ -463,6 +463,8 @@ def get_pv_data(host, port, modbusid, registers):
         try:
             addr = int(myreg[0])
             dt = myreg[1]
+            unit = myreg[4]
+            used_type = "float"
             received = client.read_input_registers(address=addr, count=modbusdatatype[dt], slave=int(modbusid))
         except Exception as e:
             thisdate = str(datetime.datetime.now()).partition('.')[0]
@@ -510,9 +512,15 @@ def get_pv_data(host, port, modbusid, registers):
             elif myreg[2] == 'ENUM':
                 e = pvenums.get(name, {})
                 value = e.get(interpreted, str(interpreted))
+                used_type = "string"
             else:
                 value = interpreted
-        data[name] = value
+                               
+        one_value = {}
+        one_value['value'] = value
+        one_value['unit'] = unit
+        one_value['type'] = used_type
+        data[name] = one_value
 
     client.close()
     return data
