@@ -168,17 +168,17 @@ def run(emparts, config):
         topic_state = f"{topic}/$state"
         value_state = f"ready"
         topic_nodes = f"{topic}/$nodes"
-        value_meter_nodes = f"meter" 
-        topic_meter_node = f"{topic}/meter"
-        topic_node_name = f"{value_meter_nodes}/$name"
-        value_meter_node_name = f"SMA HomeManager2.0"
-        topic_node_properties = f"{topic_meter_node}/$properties"      
-        value_node_properties = mqttfields   
+        value_nodes = f"meter" 
+        topic_node = f"{topic}/meter"
+        topic_node_name = f"{topic_node}/$name"
+        value_node_name = f"SMA HomeManager2.0"
+        topic_node_properties = f"{topic_node}/$properties"
+        value_node_properties = mqttfields
         client.publish(topic_homie, value_homie)
         client.publish(topic_name, "SMA energy meter")
         client.publish(topic_state, value_state)
-        client.publish(topic_nodes, value_meter_nodes)
-        client.publish(topic_node_name, value_meter_node_name)
+        client.publish(topic_nodes, value_nodes)
+        client.publish(topic_node_name, value_node_name)
         client.publish(topic_node_properties, value_node_properties)
 
         #client.publish(topic, payload)
@@ -188,7 +188,7 @@ def run(emparts, config):
                                                                       mqtt_last_update))), payload))
 
         for item in data_with_units.keys():
-            itemtopic = topic_meter_node + '/' + item
+            itemtopic = topic_node + '/' + item
             item_topic_name = f"{itemtopic}/$name"
             item_topic_unit = f"{itemtopic}/$unit"
             item_topic_datatype = f"{itemtopic}/$datatype"
@@ -204,61 +204,60 @@ def run(emparts, config):
         # pvoption
         # inverter
         # mqttpvtopic = mqtt_homie_topic + config.get('pvtopic', "SMD-PV")
-        # pvserial = inv.get("serial").get("value")
-        # mqttpvtopic = mqtt_homie_topic + mqtt_inverter_topic + str(pvserial)
-        # if None not in [pv_data, mqttpvtopic]:
-        #     inverter_topic_homie = f"{mqttpvtopic}/$homie"
-        #     inverter_value_homie = f"4.0"
-        #     inverter_topic_name = f"{mqttpvtopic}/$name"
-        #     inverter_topic_state = f"{mqttpvtopic}/$state"
-        #     inverter_value_state = f"ready"
-        #     inverter_topic_nodes = f"{mqttpvtopic}/$nodes"
-        #     inverter_value_nodes = f"inverter2"        
-        #     inverter_topic_node = f"{mqttpvtopic}/inverter"
-        #     inverter_topic_node_name = f"{inverter_value_nodes}/$name"
-        #     inverter_value_node_name = f"SMA Inverter" 
-
-        #     inverter_topic_node_properties = f"{inverter_topic_node}/$properties" 
-       
-        #     client.publish(inverter_topic_homie, inverter_value_homie)
-        #     client.publish(inverter_topic_name, "SMA Inverter")
-        #     client.publish(inverter_topic_state, inverter_value_state)
-        #     client.publish(inverter_topic_nodes, inverter_value_nodes)
-        #     client.publish(inverter_topic_node_name, inverter_value_node_name)
+        pvserial = inv.get("serial").get("value")
+        inverter_topic = mqtt_homie_topic + mqtt_inverter_topic + str(pvserial)
+        if None not in [pv_data, inverter_topic]:
+            inverter_topic_homie = f"{inverter_topic}/$homie"
+            inverter_value_homie = f"4.0"
+            inverter_topic_name = f"{inverter_topic}/$name"
+            inverter_topic_state = f"{inverter_topic}/$state"
+            inverter_value_state = f"ready"
+            inverter_topic_nodes = f"{inverter_topic}/$nodes"
+            inverter_value_nodes = f"meter"
+            inverter_topic_node = f"{inverter_topic}/meter"
+            inverter_topic_node_name = f"{inverter_topic_node}/$name"
+            inverter_value_node_name = f"SMA Inverter"
+            inverter_topic_node_properties = f"{inverter_topic_node}/$properties"
             
-        #     if pv_data is not None:
-        #         for inv_data in pv_data:
-        #             inv_mqtt_properties = ""
-        #             for item in inv_data.keys():
+            client.publish(inverter_topic_homie, inverter_value_homie)
+            client.publish(inverter_topic_name, "SMA Inverter")
+            client.publish(inverter_topic_state, inverter_value_state)
+            client.publish(inverter_topic_nodes, inverter_value_nodes)
+            client.publish(inverter_topic_node_name, inverter_value_node_name)
+                 
+            if pv_data is not None:
+                for inv_data in pv_data:
+                    inv_mqtt_properties = ""
+                    for item in inv_data.keys():
 
-        #                 if item == "timestamp":
-        #                     continue
+                        if item == "timestamp":
+                            continue
 
-        #                 if inv_mqtt_properties != "":
-        #                     inv_mqtt_properties += ","
-        #                 inv_mqtt_properties += item
+                        if inv_mqtt_properties != "":
+                            inv_mqtt_properties += ","
+                        inv_mqtt_properties += item
 
-        #             client.publish(inverter_topic_node_properties, inv_mqtt_properties)   
+                    client.publish(inverter_topic_node_properties, inv_mqtt_properties)   
 
-        #         for inv_data in pv_data:
-        #             inv_mqtt_properties = ""
-        #             for item in inv_data.keys():
+                for inv_data in pv_data:
+                    inv_mqtt_properties = ""
+                    for item in inv_data.keys():
 
-        #                 if item == "timestamp":
-        #                     continue
+                        if item == "timestamp":
+                            continue
 
-        #                 itemtopic = inverter_topic_node + '/' + item
-        #                 item_topic_name = f"{itemtopic}/$name"
-        #                 item_topic_unit = f"{itemtopic}/$unit"
-        #                 item_topic_datatype = f"{itemtopic}/$datatype"
+                        itemtopic = inverter_topic_node + '/' + item
+                        item_topic_name = f"{itemtopic}/$name"
+                        item_topic_unit = f"{itemtopic}/$unit"
+                        item_topic_datatype = f"{itemtopic}/$datatype"
 
-        #                 if mqtt_debug > 0:
-        #                     print("mqtt homie: publishing %s:%s %s" % (itemtopic, inv_data.get(item).get("value"), inv_data.get(item).get("unit")))
+                        if mqtt_debug > 0:
+                            print("mqtt homie: publishing %s:%s %s" % (itemtopic, inv_data.get(item).get("value"), inv_data.get(item).get("unit")))
                        
-        #                 client.publish(item_topic_name, item)
-        #                 client.publish(itemtopic, str(inv_data.get(item).get("value")))
-        #                 client.publish(item_topic_unit, str(inv_data.get(item).get("unit")))
-        #                 client.publish(item_topic_datatype, str(inv_data.get(item).get("type")))
+                        client.publish(item_topic_name, item)
+                        client.publish(itemtopic, str(inv_data.get(item).get("value")))
+                        client.publish(item_topic_unit, str(inv_data.get(item).get("unit")))
+                        client.publish(item_topic_datatype, str(inv_data.get(item).get("type")))
 
                     # pvserial = inv.get("serial").get("value")
                     # pvtopic = mqttpvtopic + str(pvserial)
