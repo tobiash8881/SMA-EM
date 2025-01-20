@@ -203,8 +203,8 @@ def run(emparts, config):
 
         # pvoption
         # inverter
-        # mqttpvtopic = mqtt_homie_topic + config.get('pvtopic', "SMD-PV")
         pvserial = inv.get("serial").get("value")
+        pvTyp = inv.get("DeviceID").get("value")
         inverter_topic = mqtt_homie_topic + mqtt_inverter_topic + str(pvserial)
         if None not in [pv_data, inverter_topic]:
             inverter_topic_homie = f"{inverter_topic}/$homie"
@@ -216,7 +216,7 @@ def run(emparts, config):
             inverter_value_nodes = f"meter"
             inverter_topic_node = f"{inverter_topic}/meter"
             inverter_topic_node_name = f"{inverter_topic_node}/$name"
-            inverter_value_node_name = f"SMA Inverter"
+            inverter_value_node_name = str(pvTyp)
             inverter_topic_node_properties = f"{inverter_topic_node}/$properties"
             
             client.publish(inverter_topic_homie, inverter_value_homie)

@@ -117,9 +117,9 @@ mqttfields=pconsume,pconsumecounter,psupply,psupplycounter,p1consume,p2consume,p
 mqtttopic=SMA-HM
 invertertopic=SMA-PV
 # How frequently to send updates over (defaults to 20 sec)
-min_update=5
+min_update=3
 #debug output
-debug=1
+debug=0
 
 # ssl support
 # adopt mqttport above to your ssl enabled mqtt port, usually 8883
@@ -146,7 +146,7 @@ debugport=9100
 #and/or stored the data to a influx database (features=pvdata influxdb), and/or symcom ...
 
 # How frequently to send updates over (defaults to 20 sec)
-min_update=5
+min_update=3
 #debug output
 debug=0
 
@@ -171,21 +171,37 @@ registers = [
     ['30783', 'S32', 'FIX2', 'AC_Voltage_L1', 'V'],
     ['30785', 'S32', 'FIX2', 'AC_Voltage_L2', 'V'],
     ['30787', 'S32', 'FIX2', 'AC_Voltage_L3', 'V'],
+    ['30977', 'S32', 'FIX3', 'AC_Current_L1', 'A'],
+    ['30979', 'S32', 'FIX3', 'AC_Current_L2', 'A'],
+    ['30981', 'S32', 'FIX3', 'AC_Current_L3', 'A'],
     ['30777', 'S32', 'FIX0', 'AC_Power_L1', 'W'],
     ['30779', 'S32', 'FIX0', 'AC_Power_L2', 'W'],
     ['30781', 'S32', 'FIX0', 'AC_Power_L3', 'W'],
     ['30803', 'U32', 'FIX2', 'Grid_Frequency', 'Hz'],
-    ['30773', 'S32', 'FIX0', 'DC_Input1_Power', 'W'],
-    ['30771', 'S32', 'FIX2', 'DC_Input1_Voltage', 'V'],
-    ['30769', 'S32', 'FIX3', 'DC_Input1_Current', 'A'],
-    ['30961', 'S32', 'FIX0', 'DC_Input2_Power', 'W'],
-    ['30959', 'S32', 'FIX2', 'DC_Input2_Voltage', 'V'],
-    ['30957', 'S32', 'FIX3', 'DC_Input2_Current', 'A'],
+    ['30773', 'S32', 'FIX0', 'DC_InputA_Power', 'W'],
+    ['30771', 'S32', 'FIX2', 'DC_InputA_Voltage', 'V'],
+    ['30769', 'S32', 'FIX3', 'DC_InputA_Current', 'A'],
+#    ['34621', 'S32', 'FIX0', 'InputA_Temperature', u'\xb0C'],
+    ['30961', 'S32', 'FIX0', 'DC_InputB_Power', 'W'],
+    ['30959', 'S32', 'FIX2', 'DC_InputB_Voltage', 'V'],
+    ['30957', 'S32', 'FIX3', 'DC_InputB_Current', 'A'],
+#    ['34629', 'S32', 'FIX0', 'InputB_Temperature', u'\xb0C'],
     ['30953', 'S32', 'FIX1', 'Device_Temperature', u'\xb0C'],
     ['30517', 'U64', 'FIX3', 'dailyYield', 'kWh'],      #Don't change 'dailyYield'    => it is used in some features/*.py files. As alternative use the mqtt topic 'SMA-EM/status/30028xxxxx/pvdaily' => 30028xxxxxs => see 'serials' above
     ['30513', 'U64', 'FIX3', 'Total_Yield', 'kWh'],
-    ['30521', 'U64', 'FIX0', 'Operating_Time', 's'],
-    ['30525', 'U64', 'FIX0', 'Feed-in_Time', 's'],
+#    ['30521', 'U64', 'FIX0', 'Operating_Time', 's'],
+#    ['30525', 'U64', 'FIX0', 'Feed-in_Time', 's'],
     ['30975', 'S32', 'FIX2', 'Intermediate_Circuit_Voltage', 'V'],
-    ['30225', 'S32', 'FIX0', 'Isolation_Resistance', u'\u03a9']
+    ['30225', 'S32', 'FIX0', 'Isolation_Resistance', u'\u03a9'],
+    ['30955', 'U32', 'FIX0', 'Battery_Operating_Status', ''],
+    ['30849', 'S32', 'FIX1', 'Battery_Temperature', u'\xb0C'],
+    ['30845', 'U32', 'FIX0', 'Battery_SOC', u'\u0025'],
+    ['30851', 'U32', 'FIX2', 'Battery_Voltage','V'],
+    ['30533', 'S32', 'FIX3', 'Battery_Current', 'A'],
+    ['31395', 'U32', 'FIX0', 'Battery_Discharge','W'],
+    ['31393', 'U32', 'FIX0', 'Battery_Charge','W'],
+    ['30867', 'S32', 'FIX0', 'Power to grid', 'W'],	
+    ['30865', 'S32', 'FIX0', 'Power from grid', 'W'],
+    ['30581', 'U32', 'FIX0', 'Energy from grid', 'Wh'],
+    ['30583', 'U32', 'FIX0', 'Energy to grid', 'Wh']
     ]
