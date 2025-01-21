@@ -78,7 +78,7 @@ sudo ip route add 224.0.0.0/4 dev interfacename
 ```
 sudo apt install git
 sudo apt install python3 cl-py-configparser
-pip install paho-mqtt 
+pip3 install paho-mqtt ( pip3 install paho-mqtt --break-system-packages )
 pip install pymodbus
 pip3 install Homie4
 sudo mkdir /opt/smaemd/
